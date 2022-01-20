@@ -29,15 +29,12 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-export default function Home({
-  results,
-  next_page,
-}: PostPagination): JSX.Element {
-  const [posts, setPosts] = useState<Post[]>(results);
-  const [nextPage, setNextPage] = useState(next_page);
+export default function Home({ postsPagination }: HomeProps): JSX.Element {
+  const [posts, setPosts] = useState<Post[]>(postsPagination?.results);
+  const [nextPage, setNextPage] = useState(postsPagination?.next_page);
 
   const handleButton = async (): Promise<void> => {
-    const response = await (await fetch(next_page)).json();
+    const response = await (await fetch(nextPage)).json();
 
     const next_page_response = response.next_page;
 
@@ -65,27 +62,35 @@ export default function Home({
   return (
     <main className={styles.container}>
       {posts
-        ? posts.map(post => (
-            <div className={styles.posts}>
-              <a>
-                <Link href={`/post/${post.uid}`}>
-                  <strong>{post.data.title}</strong>
-                </Link>
-                <p>{post.data.subtitle}</p>
-                <div className={styles.postsprops}>
-                  <time>
-                    <FiCalendar />
-                    {post.first_publication_date}
-                  </time>
-                  <p>
-                    <FiUser />
-                    {post.data.author}
-                  </p>
+        ? posts.map(post => {
+            const date = format(
+              new Date(post.first_publication_date),
+              "dd ' ' MMM ' ' yyyy",
+              { locale: ptBR }
+            );
+
+            return (
+              <Link href={`/post/${post.uid}`} key={post.uid}>
+                <div className={styles.posts}>
+                  <a>
+                    <strong>{post.data.title}</strong>
+                    <p>{post.data.subtitle}</p>
+                    <div className={styles.postDetails}>
+                      <div className={styles.postInfo}>
+                        <FiCalendar />
+                        <time>{date}</time>
+                      </div>
+                      <div className={styles.postInfo}>
+                        <FiUser />
+                        <p>{post.data.author}</p>
+                      </div>
+                    </div>
+                  </a>
                 </div>
-              </a>
-            </div>
-          ))
-        : ''}
+              </Link>
+            );
+          })
+        : 'Carregando...'}
 
       {nextPage ? (
         <button
@@ -106,20 +111,14 @@ export const getStaticProps: GetStaticProps = async () => {
   const prismic = getPrismicClient();
   const postsResponse = await prismic.query(
     [Prismic.predicates.at('document.type', 'posts')],
-    { fetch: ['publication.title', 'publication.content'], pageSize: 1 }
+    { fetch: ['publication.title', 'publication.content'], pageSize: 2 }
   );
 
   const { next_page } = postsResponse;
   const results = postsResponse.results.map(post => {
-    const date = format(
-      new Date(post.first_publication_date),
-      "dd ' ' MMM ' ' yyyy",
-      { locale: ptBR }
-    );
-
     return {
       uid: post.uid,
-      first_publication_date: date,
+      first_publication_date: post.first_publication_date,
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,
@@ -130,8 +129,10 @@ export const getStaticProps: GetStaticProps = async () => {
 
   return {
     props: {
-      results,
-      next_page,
+      postsPagination: {
+        results,
+        next_page,
+      },
     },
   };
 };

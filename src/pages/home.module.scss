@@ -18,7 +18,7 @@
     }
 
     time {
-      padding-top: 1rem;
+      // padding-top: 1rem;
       font-size: 1rem;
       display: flex;
       align-items: center;
@@ -38,19 +38,27 @@
 
     p {
       color: #a8a8b3;
-      margin-top: 1rem;
+
       line-height: 1.625;
     }
   }
 }
 
-.postsprops {
+.postDetails {
   display: flex;
-  align-items: bottom;
 
-  p {
-    margin-left: 2rem;
+  p,
+  time {
+    margin: 0;
+    margin-left: 1rem;
   }
+}
+
+.postInfo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 1rem;
 }
 
 .button {
